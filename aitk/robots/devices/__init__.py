@@ -13,4 +13,5 @@ from .smellsensors import SmellSensor  # noqa: F401
 from .rangesensors import RangeSensor  # noqa: F401
 from .bulbs import Bulb  # noqa: F401
 from .beacon import Beacon  # noqa: F401
+from .balls import Ball  # noqa: F401
 from .compass import Compass  # noqa: F401

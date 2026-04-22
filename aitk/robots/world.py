@@ -20,7 +20,7 @@ from itertools import count
 from numbers import Number
 
 from .backends import make_backend
-from .devices import Bulb, Beacon
+from .devices import Bulb, Beacon, Ball
 from .robot import Robot
 from .utils import (
     Food,
@@ -216,6 +216,7 @@ class World:
         config["bulbs"] = kwargs.pop("bulbs", [])
         config["beacon"] = kwargs.pop("beacon", None)
         config["robots"] = kwargs.pop("robots", [])
+        config["balls"] = kwargs.pop("balls", [])
         config["food"] = kwargs.pop("food", [])
         if len(kwargs) != 0:
             raise AttributeError(
@@ -232,6 +233,7 @@ class World:
         self._watchers = []
         self._robots = []
         self._bulbs = []
+        self._balls = []
         self._beacon = None
         self._backend = None
         self._recording = False
@@ -239,6 +241,7 @@ class World:
         self._initialize()  # default values
         self.robots = List(self._robots)
         self.bulbs = List(self._bulbs)
+        self.balls = List(self._balls)
         self.reset()  # from config
 
     def __repr__(self):
@@ -398,6 +401,9 @@ class World:
             item (int or string): index or name of bulb
         """
         return self.bulbs[item]
+    
+    def get_ball(self, item): 
+        return self.balls[item]
 
     @property
     def beacon(self):
@@ -443,6 +449,7 @@ class World:
         self._ground_image_pixels = None
         self._walls = []
         self._bulbs.clear()
+        self._balls.clear()
         self._beacon = None
         self._complexity = 0
         self.smell_cell_size = None
@@ -563,6 +570,9 @@ class World:
             # food x, y, standard_deviation, state
             self._add_food(**food)
 
+        for ball in config.get("balls", []):
+            self._add_ball(**ball)
+
         ## Create robot, and add to world:
         for i, robotConfig in enumerate(self.config.get("robots", [])):
             # FIXME: raise if lengths don't match
@@ -645,6 +655,7 @@ class World:
             "bulbs": [],
             "beacon": None,
             "robots": [],
+            "balls": [],
             "food": [],
         }
         if self._beacon is not None:
@@ -699,6 +710,9 @@ class World:
 
         for robot in self._robots:
             config["robots"].append(robot.to_json())
+
+        for ball in self._balls:
+            config["balls"].append(ball.to_json())
 
         return config
 
@@ -904,7 +918,26 @@ class World:
         """
         self._watchers[:] = []
 
-    def add_bulb(self, color, x, y, z, brightness, name=None):
+    def add_ball(self, x, y, name=None):
+        """
+        Adds a ball object to the world
+        x (int) - x coordinate 
+        y (int) - y coordinate
+        name (str): the name of the ball
+        """
+        # print("in add_ball")
+        self._add_ball(x, y)
+        self.update()
+        self.save()
+    
+    def _add_ball(self, x, y, name=None):
+        
+        name = name if name is not None else "ball-%s" % (len(self._balls) + 1)
+        ball = Ball(x, y, name, world=self)
+        self._balls.append(ball)
+
+
+    def f(self, color, x, y, z, brightness, name=None):
         """
         Add a bulb to the world.
 
@@ -918,6 +951,18 @@ class World:
         """
         self._add_bulb(color, x, y, z, brightness, name)
         self.update()  # request draw
+        self.save()
+
+    def add_bulb(self, color, x, y, z, brightness, name=None):
+        """
+        Adds a bulb object to the world
+        x (int) - x coordinate 
+        y (int) - y coordinate
+        name (str): the name of the ball
+        """
+        # print("in add_ball")
+        self._add_bulb(color, x, y, z, brightness, name)
+        self.update()
         self.save()
 
     def _add_bulb(self, color, x, y, z, brightness, name=None):
@@ -1357,6 +1402,8 @@ class World:
         self._draw_list = self._overlay_list[:]
         for robot in self._robots:
             robot.update(self._draw_list)
+        for ball in self._balls:
+            ball.update(self._draw_list)
         if show:
             self._request_draw()
 
@@ -1432,6 +1479,7 @@ class World:
                         color.alpha = (i + 1)/bulb.draw_rings * 255
                         self._backend.set_fill_style(color)
                         points = []
+                        
                         for ray in range(bulb.rays):
                             hits = all_hits[ray]
                             ray_length = bulb.brightness/30 * radius
@@ -1443,6 +1491,11 @@ class World:
                             points.append((x2, y2))
                         self._backend.draw_polygon(points)
                     self._backend.line_width = 1
+
+            ## Draw all BALLS in world:
+            ##get it to draw a simple circle
+            for ball in self._balls:       
+                ball.draw(self._backend)
 
             ## Draw walls:
             for wall in self._walls:
@@ -1512,5 +1565,8 @@ class World:
                     kwargs = items[2]
 
                 self._backend.do_command(command, *args, **kwargs)
+
+
+        
 
         self._draw_watchers()
