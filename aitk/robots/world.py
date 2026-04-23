@@ -260,6 +260,12 @@ class World:
             robot_index = self._robots.index(robot)
             food_index = self._food.index(food)
             self._events.append((self.time, "food-off", robot_index, food_index))
+        # elif etype == "ball-kicked": 
+        #     robot = kwargs["robot"]
+        #     ball = kwargs["ball"]
+        #     self._grid.need_update = True #request re-draw?
+        #     robot_index = self._robots.index(robot)
+        #     food_index = self._balls.index(ball)
         elif etype == "bulb-on":
             bulb = kwargs["bulb"]
             bulb_index = self._bulbs.index(bulb)
