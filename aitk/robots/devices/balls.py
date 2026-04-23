@@ -156,7 +156,10 @@ class Ball(BaseDevice):
             draw_list (list): optional. If given, then the
                 method can add to it for drawing later.
         """
-        pass
+        draw_list.append(("strokeStyle", (Color(255), 1)))
+        draw_list.append(("draw_cirlce", (self.x, self.y, self.radius)))
+        draw_list.append("noStroke")
+        
 
     def draw(self, backend):
         """
