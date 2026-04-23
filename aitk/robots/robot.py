@@ -195,6 +195,7 @@ class Robot:
         self.state = defaultdict(int)
         self._set_color("red")
         self.eat_food_distance = 20
+        self.kick_ball_distance = 16
         self.do_trace = True
         self.trace = []
         self.text_trace = []
@@ -796,6 +797,23 @@ class Robot:
         a dataset?
         """
         return self.get_dataset_image is not None
+
+
+
+    def kick(self): 
+        """
+        if a robot is close enough to a ball, it will send it 
+        a fixed distance in the same direction that it is moving 
+        request a re-draw
+        
+        """
+        success = False
+        if self.world is not None: #there is some world
+            for ball in self.world._balls:
+                if distance(self.x, self.y, ball.x, ball.y) <= self.kick_ball_distance:
+                    success = True
+                    # ball.kick((self.vx + self.vy)) 
+        return success
 
     def eat(self):
         """
