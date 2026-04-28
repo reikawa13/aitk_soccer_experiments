@@ -161,8 +161,6 @@ class Ball(BaseDevice):
             self.goal = self._if_goal(old_x, old_y, new_x, new_y)
         if not self.goal:
             self.x, self.y = self._bounce_if_needed(old_x, old_y, new_x, new_y)
-
-        # self.x, self.y = new_x, new_y
   
         # update the velocity while preventing backward movement
         if self.vx > 0:
@@ -214,8 +212,6 @@ class Ball(BaseDevice):
                         self.vy = -self.vy
                     return old_x, old_y
         return new_x, new_y
-        
-        
 
     def _if_goal(self, old_x, old_y, new_x, new_y):
         for wall in self.world._walls:
@@ -228,6 +224,38 @@ class Ball(BaseDevice):
                     self.vy = 0
                     return True
         return False
+
+
+    def impact_from_robot(self, robot, degrees, robot_velocity, strength=3.0):
+        """
+        Called when a robot hits the ball to push it away from the robot. 
+        - calculate the direction of where the ball will be(dx, dy) 
+        - get the velocity gap between the robot and the ball
+        - add the velocity gap to the ball speed
+        """
+        # impact direction
+        dx, dy = self.x - robot.x, self.y - robot.y 
+        distance = math.sqrt(dx**2+dy**2)
+        print("distance is", distance)
+        if distance == 0:
+            return
+        norm_dx, norm_dy = dx/distance, dy/distance
+        # print(dx, dy)
+        # print(robot_vx, robot_vy)
+
+        # impact strength
+        robot_wvx = robot_velocity * math.cos(math.radians(degrees))
+        robot_wvy = robot_velocity * (-math.sin(math.radians(degrees)))
+        vgap_x, vgap_y =  robot_wvx - self.vx, robot_wvy - self.vy
+        print(vgap_x, vgap_y)
+
+        impact_speed = vgap_x * norm_dx + vgap_y * norm_dy
+
+        self.vx += norm_dx * impact_speed * strength
+        self.vy += norm_dy * impact_speed * strength
+
+        print(self.vx, self.vy)
+
 
 
 
