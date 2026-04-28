@@ -1376,6 +1376,8 @@ class World:
         start_time = time.monotonic()
         for robot in self._robots:
             robot._step(time_step)
+        for ball in self._balls: ## step each ball
+            ball._step(time_step)
         self.time += time_step
         self.time = round(self.time, self._time_decimal_places)
         self.update(show)

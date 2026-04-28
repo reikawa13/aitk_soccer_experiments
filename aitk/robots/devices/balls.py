@@ -23,6 +23,9 @@ class Ball(BaseDevice):
         self.robot = None
         self.world = world
         self.from_json(config)
+        self.vx = 0 # the x velocity of the ball
+        self.vy = 0 # the y velocity of the ball
+        self.friction = 0.1
 
     def initialize(self):
         """
@@ -146,7 +149,28 @@ class Ball(BaseDevice):
         return "<Ball x=%r, y=%r, name=%r>" % (self._x, self._y, self.name)
     
     def _step(self, time_step):
-        pass
+        """
+        Have the ball move one step in time. Check to see if it hits
+        any obstacles.
+        """
+        self.x += self.vx
+        self.y += self.vy
+        if self.vx > 0:
+            self.vx = max(0, self.vx - self.friction)
+        else:
+            self.vx = min(0, self.vx + self.friction)
+        if self.vy > 0:
+            self.vy = max(0, self.vy - self.friction)
+        else:
+            self.vy = min(0, self.vy + self.friction)   
+
+    def impact(self, x, y):
+        """
+        Receives impact signals from the robots. 
+        Updates the x_velcity and y_velocity.
+        """
+        self.vx = x
+        self.vy = y
 
     def update(self, draw_list=None):
         """

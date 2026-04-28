@@ -814,6 +814,11 @@ class Robot:
                     success = True
                     # ball.kick((self.vx + self.vy)) 
         return success
+    
+    def stop(self):
+        self.vx = 0
+        self.vy = 0
+        self.va = 0
 
     def eat(self):
         """
