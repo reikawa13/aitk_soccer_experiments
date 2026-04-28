@@ -1,6 +1,6 @@
 import math
 
-from ..utils import distance, rotate_around
+from ..utils import distance, rotate_around, intersect
 from .base import BaseDevice
 
 from aitk.utils import Color
@@ -26,6 +26,7 @@ class Ball(BaseDevice):
         self.vx = 0 # the x velocity of the ball
         self.vy = 0 # the y velocity of the ball
         self.friction = 0.1
+        self.goal = False
 
     def initialize(self):
         """
@@ -153,8 +154,14 @@ class Ball(BaseDevice):
         Have the ball move one step in time. Check to see if it hits
         any obstacles.
         """
-        self.x += self.vx
-        self.y += self.vy
+        old_x, old_y = self.x, self.y 
+        new_x, new_y = self.x + self.vx, self.y + self.vy
+
+        if not self.goal and self.world is not None:
+            self.goal = self._if_goal(old_x, old_y, new_x, new_y)
+        
+        self.x, self.y = new_x, new_y
+  
         if self.vx > 0:
             self.vx = max(0, self.vx - self.friction)
         else:
@@ -163,6 +170,19 @@ class Ball(BaseDevice):
             self.vy = max(0, self.vy - self.friction)
         else:
             self.vy = min(0, self.vy + self.friction)   
+
+    def _if_goal(self, old_x, old_y, new_x, new_y):
+        for wall in self.world._walls:
+            if wall.wtype != "wall":
+                continue
+            for line in wall.lines:
+                if intersect(old_x, old_y, new_x, new_y, 
+                             line.p1.x, line.p1.y, line.p2.x, line.p2.y):
+                    return True
+        return False
+
+
+
 
     def impact(self, x, y):
         """

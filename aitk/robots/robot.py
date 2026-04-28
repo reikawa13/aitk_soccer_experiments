@@ -798,8 +798,6 @@ class Robot:
         """
         return self.get_dataset_image is not None
 
-
-
     def kick(self): 
         """
         if a robot is close enough to a ball, it will send it 
