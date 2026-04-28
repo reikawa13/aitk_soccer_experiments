@@ -160,9 +160,9 @@ class Ball(BaseDevice):
         if not self.goal and self.world is not None:
             self.goal = self._if_goal(old_x, old_y, new_x, new_y)
         if not self.goal:
-            self._bounce_if_needed(new_x, new_y)
+            self.x, self.y = self._bounce_if_needed(old_x, old_y, new_x, new_y)
 
-        self.x, self.y = new_x, new_y
+        # self.x, self.y = new_x, new_y
   
         # update the velocity while preventing backward movement
         if self.vx > 0:
@@ -174,23 +174,46 @@ class Ball(BaseDevice):
         else:
             self.vy = min(0, self.vy + self.friction)   
 
-    def _bounce_if_needed(self, new_x, new_y):
+    def _bounce_if_needed(self, old_x, old_y, new_x, new_y):
         """
         if ball hits left/right coundary, vx reverses
         if ball hits top/bottom boundary: vy reverses
+        only do this when going into the wall
         returns: new_x and new_y, updates self.vx, self.vy
         """
+        left = self.radius
+        right = self.world.width - self.radius
+        top = self.radius
+        bottom = self.world.height - self.radius
+
+        if new_x < left and self.vx < 0:
+            new_x = left 
+            self.vx = -self.vx 
+        elif new_x > right and self.vx > 0:
+            new_x = right
+            self.vx = -self.vx
+        
+        if new_y < top and self.vy < 0:
+            new_y = top
+            self.vy = -self.vy
+        elif new_y > bottom and self.vy > 0:
+            new_y = bottom
+            self.vy = -self.vy
+
+        return new_x, new_y
+    
         for wall in self.world._walls:
             if wall.wtype != "boundary":
                 continue
             for line in wall.lines:
                 distance, _ = distance_point_to_line((new_x, new_y), line.p1, line.p2)
                 if distance <= self.radius:
-                    print("bouncing")
                     if line.p1.x == line.p2.x:
                         self.vx = -self.vx
                     elif line.p1.y == line.p2.y:
                         self.vy = -self.vy
+                    return old_x, old_y
+        return new_x, new_y
         
         
 
