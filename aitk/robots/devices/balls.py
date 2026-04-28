@@ -25,7 +25,7 @@ class Ball(BaseDevice):
         self.from_json(config)
         self.vx = 0 # the x velocity of the ball
         self.vy = 0 # the y velocity of the ball
-        self.friction = 0.1
+        self.friction = 0.01
         self.goal = False
 
     def initialize(self):
@@ -171,6 +171,8 @@ class Ball(BaseDevice):
             self.vy = max(0, self.vy - self.friction)
         else:
             self.vy = min(0, self.vy + self.friction)   
+        
+        self._limit_speed()
 
     def _bounce_if_needed(self, old_x, old_y, new_x, new_y):
         """
@@ -226,7 +228,7 @@ class Ball(BaseDevice):
         return False
 
 
-    def impact_from_robot(self, robot, degrees, robot_velocity, strength=3.0):
+    def impact_from_robot(self, robot, degrees, robot_velocity, strength=2.0):
         """
         Called when a robot hits the ball to push it away from the robot. 
         - calculate the direction of where the ball will be(dx, dy) 
@@ -254,9 +256,16 @@ class Ball(BaseDevice):
         self.vx += norm_dx * impact_speed * strength
         self.vy += norm_dy * impact_speed * strength
 
+        self._limit_speed() # prevent the ball from going too fast and through the robot
         print(self.vx, self.vy)
 
-
+    def _limit_speed(self):
+        speed = self.vx ** 2 + self.vy**2
+        max_speed = 15.0
+        if speed > max_speed:
+            scale = max_speed / speed
+            self.vx *= scale 
+            self.vy *= scale
 
 
 
