@@ -1,6 +1,6 @@
 import math
 
-from ..utils import distance, rotate_around, intersect
+from ..utils import distance, rotate_around, intersect, distance_point_to_line
 from .base import BaseDevice
 
 from aitk.utils import Color
@@ -159,9 +159,12 @@ class Ball(BaseDevice):
 
         if not self.goal and self.world is not None:
             self.goal = self._if_goal(old_x, old_y, new_x, new_y)
-        
+        if not self.goal:
+            self._bounce_if_needed(new_x, new_y)
+
         self.x, self.y = new_x, new_y
   
+        # update the velocity while preventing backward movement
         if self.vx > 0:
             self.vx = max(0, self.vx - self.friction)
         else:
@@ -171,9 +174,25 @@ class Ball(BaseDevice):
         else:
             self.vy = min(0, self.vy + self.friction)   
 
-    def _bounce_if_needed(self, old_x, old_y, new_x, new_y):
-        ## TBA
-        pass
+    def _bounce_if_needed(self, new_x, new_y):
+        """
+        if ball hits left/right coundary, vx reverses
+        if ball hits top/bottom boundary: vy reverses
+        returns: new_x and new_y, updates self.vx, self.vy
+        """
+        for wall in self.world._walls:
+            if wall.wtype != "boundary":
+                continue
+            for line in wall.lines:
+                distance, _ = distance_point_to_line((new_x, new_y), line.p1, line.p2)
+                if distance <= self.radius:
+                    print("bouncing")
+                    if line.p1.x == line.p2.x:
+                        self.vx = -self.vx
+                    elif line.p1.y == line.p2.y:
+                        self.vy = -self.vy
+        
+        
 
     def _if_goal(self, old_x, old_y, new_x, new_y):
         for wall in self.world._walls:
