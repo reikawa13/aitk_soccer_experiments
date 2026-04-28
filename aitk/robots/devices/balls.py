@@ -171,6 +171,10 @@ class Ball(BaseDevice):
         else:
             self.vy = min(0, self.vy + self.friction)   
 
+    def _bounce_if_needed(self, old_x, old_y, new_x, new_y):
+        ## TBA
+        pass
+
     def _if_goal(self, old_x, old_y, new_x, new_y):
         for wall in self.world._walls:
             if wall.wtype != "wall":
@@ -178,6 +182,8 @@ class Ball(BaseDevice):
             for line in wall.lines:
                 if intersect(old_x, old_y, new_x, new_y, 
                              line.p1.x, line.p1.y, line.p2.x, line.p2.y):
+                    self.vx = 0
+                    self.vy = 0
                     return True
         return False
 
