@@ -25,7 +25,7 @@ class Ball(BaseDevice):
         self.from_json(config)
         self.vx = 0 # the x velocity of the ball
         self.vy = 0 # the y velocity of the ball
-        self.friction = 0.01
+        self.friction = 0.07
         self.goal = False
 
     def initialize(self):
@@ -238,7 +238,7 @@ class Ball(BaseDevice):
         # impact direction
         dx, dy = self.x - robot.x, self.y - robot.y 
         distance = math.sqrt(dx**2+dy**2)
-        print("distance is", distance)
+        # print("distance is", distance)
         if distance == 0:
             return
         norm_dx, norm_dy = dx/distance, dy/distance
@@ -249,7 +249,7 @@ class Ball(BaseDevice):
         robot_wvx = robot_velocity * math.cos(math.radians(degrees))
         robot_wvy = robot_velocity * (-math.sin(math.radians(degrees)))
         vgap_x, vgap_y =  robot_wvx - self.vx, robot_wvy - self.vy
-        print(vgap_x, vgap_y)
+        # print(vgap_x, vgap_y)
 
         impact_speed = vgap_x * norm_dx + vgap_y * norm_dy
 
@@ -257,7 +257,7 @@ class Ball(BaseDevice):
         self.vy += norm_dy * impact_speed * strength
 
         self._limit_speed() # prevent the ball from going too fast and through the robot
-        print(self.vx, self.vy)
+        # print(self.vx, self.vy)
 
     def _limit_speed(self):
         speed = self.vx ** 2 + self.vy**2

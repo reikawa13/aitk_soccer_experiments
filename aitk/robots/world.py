@@ -932,14 +932,14 @@ class World:
         name (str): the name of the ball
         """
         # print("in add_ball")
-        self._add_ball(x, y)
+        self._add_ball(x, y, name)
         self.update()
         self.save()
     
-    def _add_ball(self, x, y, name=None):
+    def _add_ball(self, x, y, name=None, **kwargs):
         
         name = name if name is not None else "ball-%s" % (len(self._balls) + 1)
-        ball = Ball(x, y, name, world=self)
+        ball = Ball(x, y, name, world=self, **kwargs)
         self._balls.append(ball)
 
 

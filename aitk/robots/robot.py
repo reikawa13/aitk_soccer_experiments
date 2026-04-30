@@ -22,6 +22,7 @@ from .utils import (
     Point,
     degrees_to_world,
     distance,
+    distance_point_to_line,
     intersect,
     rotate_around,
     PI_OVER_180,
@@ -236,6 +237,8 @@ class Robot:
         self.food_eaten = 0
         self._watcher = None
         self._init_boundingbox()
+        self.discovery_time = math.inf
+        self.goal_time = math.inf
 
     def from_json(self, config):
         """
@@ -927,6 +930,46 @@ class Robot:
             return (self.vx / self.vx_max, self.va / self.va_max)
         else:
             return (self.tvx / self.vx_max, self.tva / self.va_max)
+        
+    def update_sensors(self):
+        """
+        finds the location and angle to the ball and the gall
+        """
+        if self.world is None:
+            return 1, 1, 1, 1
+        for ball in self.world._balls:
+            ball_distance = distance(self.x, self.y, ball.x, ball.y)
+            
+        wall_distances = []
+        for wall in self.world._walls:
+            if wall.wtype != "wall":
+                continue
+            for line in wall.lines:
+                wall_distance, nearest = distance_point_to_line((self.x, self.y), line.p1, line.p2)
+                wall_distances.append(wall_distance)
+        goal_distance = min(wall_distances)
+
+        dx = ball.x - self.x
+        dy = ball.y - self.y
+
+        target_angle = math.atan2(-dy, dx)
+        relative_angle = target_angle - self.a
+        relative_angle = (relative_angle + math.pi) % (2 * math.pi) - math.pi
+        ball_angle = relative_angle / math.pi
+
+        nearest_x, nearest_y, _ = nearest
+
+        dx = nearest_x - self.x
+        dy = nearest_y - self.y
+
+        target_angle = math.atan2(-dy, dx)
+        relative_angle = target_angle - self.a
+        relative_angle = (relative_angle + math.pi) % (2 * math.pi) - math.pi
+
+        goal_angle = relative_angle / math.pi
+
+
+        return ball_distance, ball_angle, goal_distance, goal_angle
 
     def cast_ray(self, x1, y1, a, maxRange, x2=None, y2=None, ignore_robots=None):
         """

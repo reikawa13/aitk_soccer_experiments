@@ -92,13 +92,26 @@ def world_to_degrees(direction):
 
 def cast_ray(world, robot, x1, y1, a, maxRange,
              x2=None, y2=None, ignore_robots=None):
+    """
+    traces one straight ray through the world and 
+    returns a list of things that ray hits
+    """
     # walls and robots
     hits = []
+    # if no endpoint is provided, compute one from the angle and range
+    # the ray segment is from (x1, y1) to (x2, y2)
     if x2 is None:
         x2 = math.sin(a) * maxRange + x1
     if y2 is None:
         y2 = math.cos(a) * maxRange + y1
 
+    # for ball in world._balls:
+    #     # if the ray passes through the ball, add to hit
+    #     ball_distance = distance_point_to_line((ball.x, ball.y), (x1, y1), (x2, y2))[0]
+    #     if ball_distance < ball.radius:
+    #         hits.append(Hit(None, None, ball, None, None,None, ball_distance, None, None, None, None, None))
+
+    # iterates over all the walls in the world
     for wall in world._walls:
         # never detect hit with yourself
         if robot is not None and wall.robot is robot:
@@ -108,6 +121,7 @@ def cast_ray(world, robot, x1, y1, a, maxRange,
             (wall.robot is not None) and
             (wall.robot in ignore_robots)):
             continue
+        # if the ray intersects, compute distance
         for line in wall.lines:
             p1 = line.p1
             p2 = line.p2
@@ -117,6 +131,21 @@ def cast_ray(world, robot, x1, y1, a, maxRange,
                 height = 1.0 if wall.robot is None else wall.robot.height
                 color = wall.robot.color if wall.robot else wall.color
                 boundary = len(wall.lines) == 1
+                # hits.append(
+                #     Hit(wall,
+                #         wall.robot,
+                #         None,
+                #         height,
+                #         pos[0],
+                #         pos[1],
+                #         dist,
+                #         color,
+                #         x1,
+                #         y1,
+                #         boundary,
+                #         a,
+                #     )
+                # )
                 hits.append(
                     Hit(wall,
                         wall.robot,
@@ -132,6 +161,7 @@ def cast_ray(world, robot, x1, y1, a, maxRange,
                     )
                 )
 
+    # sort the hits by distance, farthest first
     hits.sort(
         key=lambda a: a.distance, reverse=True
     )  # further away first, back to front
