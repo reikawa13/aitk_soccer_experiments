@@ -935,11 +935,12 @@ class Robot:
         """
         finds the location and angle to the ball and the gall
         """
+        scale = max(self.world.width, self.world.height)
         if self.world is None:
             return 1, 1, 1, 1
         for ball in self.world._balls:
-            ball_distance = distance(self.x, self.y, ball.x, ball.y)
-            
+            ball_distance = distance(self.x, self.y, ball.x, ball.y)/scale
+
         wall_distances = []
         for wall in self.world._walls:
             if wall.wtype != "wall":
@@ -947,7 +948,7 @@ class Robot:
             for line in wall.lines:
                 wall_distance, nearest = distance_point_to_line((self.x, self.y), line.p1, line.p2)
                 wall_distances.append(wall_distance)
-        goal_distance = min(wall_distances)
+        goal_distance = min(wall_distances)/scale
 
         dx = ball.x - self.x
         dy = ball.y - self.y
