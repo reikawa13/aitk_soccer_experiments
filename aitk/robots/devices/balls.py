@@ -231,33 +231,28 @@ class Ball(BaseDevice):
     def impact_from_robot(self, robot, degrees, robot_velocity, strength=2.0):
         """
         Called when a robot hits the ball to push it away from the robot. 
-        - calculate the direction of where the ball will be(dx, dy) 
+        - calculate the direction of where the ball will be (dx, dy) 
         - get the velocity gap between the robot and the ball
         - add the velocity gap to the ball speed
         """
         # impact direction
         dx, dy = self.x - robot.x, self.y - robot.y 
         distance = math.sqrt(dx**2+dy**2)
-        # print("distance is", distance)
         if distance == 0:
             return
-        norm_dx, norm_dy = dx/distance, dy/distance
-        # print(dx, dy)
-        # print(robot_vx, robot_vy)
+        norm_dx, norm_dy = dx/distance, dy/distance # normalize
 
         # impact strength
-        robot_wvx = robot_velocity * math.cos(math.radians(degrees))
-        robot_wvy = robot_velocity * (-math.sin(math.radians(degrees)))
+        robot_wvx = robot_velocity * math.cos(math.radians(degrees)) # convert to how ball_vx is represented
+        robot_wvy = robot_velocity * (-math.sin(math.radians(degrees))) # convert to how ball_vx is represented
         vgap_x, vgap_y =  robot_wvx - self.vx, robot_wvy - self.vy
-        # print(vgap_x, vgap_y)
 
-        impact_speed = vgap_x * norm_dx + vgap_y * norm_dy
+        impact_speed = vgap_x * norm_dx + vgap_y * norm_dy # a parameter for deciding .vx and .vy
 
-        self.vx += norm_dx * impact_speed * strength
+        self.vx += norm_dx * impact_speed * strength # direction x speed x constant
         self.vy += norm_dy * impact_speed * strength
 
-        self._limit_speed() # prevent the ball from going too fast and through the robot
-        # print(self.vx, self.vy)
+        self._limit_speed() # prevent the ball from going too fast and through the robot (bug)
 
     def _limit_speed(self):
         speed = self.vx ** 2 + self.vy**2
