@@ -1,4 +1,4 @@
-# Evolving AITK SOCCER AGENT with NEAT for Robotic Simulation
+# Evolving AITK Soccer Agent with NEAT for Robotic Simulation
 
 In this project, we worked on training an agent to play soccer. 
 ## File is in: 
