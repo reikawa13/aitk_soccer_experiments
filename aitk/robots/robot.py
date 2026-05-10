@@ -237,8 +237,11 @@ class Robot:
         self.food_eaten = 0
         self._watcher = None
         self._init_boundingbox()
-        self.discovery_time = math.inf
-        self.goal_time = math.inf
+        self.discovery_time = math.inf # ADDED
+        self.goal_time = None #ADDED
+        self.closest_distance = math.inf  #distance between the ball and the goal
+        self.num_kicks = 0
+        self.prev_kicktime = None
 
     def from_json(self, config):
         """
@@ -806,7 +809,6 @@ class Robot:
         if a robot is close enough to a ball, it will send it 
         a fixed distance in the same direction that it is moving 
         request a re-draw
-        
         """
         success = False
         if self.world is not None: #there is some world
@@ -930,17 +932,20 @@ class Robot:
             return (self.vx / self.vx_max, self.va / self.va_max)
         else:
             return (self.tvx / self.vx_max, self.tva / self.va_max)
-        
+    
     def update_sensors(self):
         """
-        finds the location and angle to the ball and the gall
+        finds the location and angle to the ball and the goal
+        as well as the distance and angle between the goal and the ball
         """
+        # distance to the ball
         scale = max(self.world.width, self.world.height)
         if self.world is None:
             return 1, 1, 1, 1
         for ball in self.world._balls:
             ball_distance = distance(self.x, self.y, ball.x, ball.y)/scale
 
+        # distance to the goal
         wall_distances = []
         for wall in self.world._walls:
             if wall.wtype != "wall":
@@ -950,14 +955,16 @@ class Robot:
                 wall_distances.append(wall_distance)
         goal_distance = min(wall_distances)/scale
 
+        # angle to the ball
         dx = ball.x - self.x
         dy = ball.y - self.y
 
-        target_angle = math.atan2(-dy, dx)
+        target_angle = math.atan2(-dy, dx) 
         relative_angle = target_angle - self.a
         relative_angle = (relative_angle + math.pi) % (2 * math.pi) - math.pi
         ball_angle = relative_angle / math.pi
 
+        # angle to the goal
         nearest_x, nearest_y, _ = nearest
 
         dx = nearest_x - self.x
@@ -969,8 +976,24 @@ class Robot:
 
         goal_angle = relative_angle / math.pi
 
+        # distance between the goal and the ball
+        wall_ball_distances = []
+        for wall in self.world._walls:
+            if wall.wtype != "wall":
+                continue
+            for line in wall.lines:
+                wall__ball_distance, nearest = distance_point_to_line((ball.x, ball.y), line.p1, line.p2)
+                wall_ball_distances.append(wall__ball_distance)
+        goal_ball_distance = min(wall_ball_distances)/scale
 
-        return ball_distance, ball_angle, goal_distance, goal_angle
+        # angle bewteen the goal and the ball
+        nearest_x, nearest_y, _ = nearest
+        relative_angle = math.atan2((nearest_y-ball.y), nearest_x-ball.x) / math.pi
+        goal_ball_angle = (relative_angle + math.pi) % (2 * math.pi) - math.pi
+        # print("gb-angle", goal_ball_angle)
+
+
+        return ball_distance, ball_angle, goal_distance, goal_angle, goal_ball_distance, goal_ball_angle
 
     def cast_ray(self, x1, y1, a, maxRange, x2=None, y2=None, ignore_robots=None):
         """

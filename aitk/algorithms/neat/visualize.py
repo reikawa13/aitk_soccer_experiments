@@ -1,11 +1,29 @@
 from __future__ import print_function
 
 import copy
+import os
+import shutil
 import warnings
 
 import graphviz
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def _ensure_graphviz_executable():
+    """Make Graphviz's dot executable discoverable in common macOS installs."""
+    if shutil.which("dot"):
+        return
+
+    for path in ("/opt/homebrew/bin", "/usr/local/bin"):
+        if os.path.exists(os.path.join(path, "dot")):
+            os.environ["PATH"] = path + os.pathsep + os.environ.get("PATH", "")
+            return
+
+    raise RuntimeError(
+        "Graphviz executable 'dot' was not found. Install Graphviz with "
+        "'brew install graphviz' on macOS, then restart the notebook kernel."
+    )
 
 
 def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
@@ -120,6 +138,7 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
     if graphviz is None:
         warnings.warn("This display is not available due to a missing optional dependency (graphviz)")
         return
+    _ensure_graphviz_executable()
 
     if node_names is None:
         node_names = {}

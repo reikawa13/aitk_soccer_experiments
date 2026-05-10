@@ -590,8 +590,10 @@ class World:
                 robot = Robot(**robotConfig)
                 self.add_robot(robot)
         # Create the backend if first time:
-        if self._backend is None:
+        if self._backend == None:
             self._backend = make_backend(self.width, self.height, self.scale)
+            print("created backend")
+            print(type(self._backend))
         # Update the backend if it already existed, but differs in config
         self._backend.update_dimensions(self.width, self.height, self.scale)
 
@@ -931,15 +933,14 @@ class World:
         y (int) - y coordinate
         name (str): the name of the ball
         """
-        # print("in add_ball")
-        self._add_ball(x, y, name)
+        self._add_ball(x, y)
         self.update()
         self.save()
     
     def _add_ball(self, x, y, name=None, **kwargs):
         
         name = name if name is not None else "ball-%s" % (len(self._balls) + 1)
-        ball = Ball(x, y, name, world=self, **kwargs)
+        ball = Ball(x, y, name, world=self)
         self._balls.append(ball)
 
 

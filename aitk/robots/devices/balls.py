@@ -25,8 +25,9 @@ class Ball(BaseDevice):
         self.from_json(config)
         self.vx = 0 # the x velocity of the ball
         self.vy = 0 # the y velocity of the ball
-        self.friction = 0.07
+        self.friction = 0.15
         self.goal = False
+        self.closest_distance = math.inf
 
     def initialize(self):
         """
@@ -172,8 +173,29 @@ class Ball(BaseDevice):
         else:
             self.vy = min(0, self.vy + self.friction)   
         
-        self._limit_speed()
+        for wall in self.world._walls:
+            if wall.wtype != "wall":
+                continue
+            for line in wall.lines:
+                goal_distance, _ = distance_point_to_line((self.x, self.y), line.p1, line.p2)
+                if goal_distance < self.closest_distance:
+                    #update closest distance after kicking
+                    #print("updated goal_distance:", goal_distance)
+                    self.closest_distance = goal_distance  
+                
 
+    def _if_goal(self, old_x, old_y, new_x, new_y):
+        for wall in self.world._walls:
+            if wall.wtype != "wall":
+                continue
+            for line in wall.lines:
+                if intersect(old_x, old_y, new_x, new_y, 
+                             line.p1.x, line.p1.y, line.p2.x, line.p2.y):
+                    self.vx = 0
+                    self.vy = 0
+                    return True
+        return False
+    
     def _bounce_if_needed(self, old_x, old_y, new_x, new_y):
         """
         if ball hits left/right coundary, vx reverses
@@ -215,44 +237,36 @@ class Ball(BaseDevice):
                     return old_x, old_y
         return new_x, new_y
 
-    def _if_goal(self, old_x, old_y, new_x, new_y):
-        for wall in self.world._walls:
-            if wall.wtype != "wall":
-                continue
-            for line in wall.lines:
-                if intersect(old_x, old_y, new_x, new_y, 
-                             line.p1.x, line.p1.y, line.p2.x, line.p2.y):
-                    self.vx = 0
-                    self.vy = 0
-                    return True
-        return False
-
-
     def impact_from_robot(self, robot, degrees, robot_velocity, strength=2.0):
         """
         Called when a robot hits the ball to push it away from the robot. 
-        - calculate the direction of where the ball will be (dx, dy) 
+        - calculate the direction of where the ball will be(dx, dy) 
         - get the velocity gap between the robot and the ball
         - add the velocity gap to the ball speed
         """
         # impact direction
         dx, dy = self.x - robot.x, self.y - robot.y 
         distance = math.sqrt(dx**2+dy**2)
+        # print("distance is", distance)
         if distance == 0:
             return
-        norm_dx, norm_dy = dx/distance, dy/distance # normalize
+        norm_dx, norm_dy = dx/distance, dy/distance
+        # print(dx, dy)
+        # print(robot_vx, robot_vy)
 
         # impact strength
-        robot_wvx = robot_velocity * math.cos(math.radians(degrees)) # convert to how ball_vx is represented
-        robot_wvy = robot_velocity * (-math.sin(math.radians(degrees))) # convert to how ball_vx is represented
+        robot_wvx = robot_velocity * math.cos(math.radians(degrees))
+        robot_wvy = robot_velocity * (-math.sin(math.radians(degrees)))
         vgap_x, vgap_y =  robot_wvx - self.vx, robot_wvy - self.vy
+        # print(vgap_x, vgap_y)
 
-        impact_speed = vgap_x * norm_dx + vgap_y * norm_dy # a parameter for deciding .vx and .vy
+        impact_speed = vgap_x * norm_dx + vgap_y * norm_dy
 
-        self.vx += norm_dx * impact_speed * strength # direction x speed x constant
+        self.vx += norm_dx * impact_speed * strength
         self.vy += norm_dy * impact_speed * strength
 
-        self._limit_speed() # prevent the ball from going too fast and through the robot (bug)
+        # self._limit_speed() # prevent the ball from going too fast and through the robot
+        # print(self.vx, self.vy)
 
     def _limit_speed(self):
         speed = self.vx ** 2 + self.vy**2
@@ -262,8 +276,6 @@ class Ball(BaseDevice):
             self.vx *= scale 
             self.vy *= scale
 
-
-
     def impact(self, x, y):
         """
         Receives impact signals from the robots. 
@@ -271,6 +283,7 @@ class Ball(BaseDevice):
         """
         self.vx = x
         self.vy = y
+
 
     def update(self, draw_list=None):
         """

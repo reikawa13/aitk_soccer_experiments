@@ -1,3 +1,23 @@
+# Evolving AITK SOCCER AGENT with NEAT for Robotic Simulation
+
+In this project, we worked on training an agent to play soccer. 
+## File is in: 
+[aitk_soccer_experiments-master/notebooks/Advanced/EvolveSoccer.ipynb](aitk_soccer_experiments-master/notebooks/Advanced/EvolveSoccer.ipynb)
+
+## How to run the simulation: 
+
+Because all of the crucial code is contained in a jupyter notebook, it should be rather straight-forward to run. 
+
+After you have established a jupyter environment: 
+- Scroll down to check the config settings for NEAT. These may be changed to modify the way that the genetic algorithm behaves. You can also adjust the confic settings as well as the starting location of the objects in the world, such as the robot, the goal, and the ball. 
+- Run all of the cells of the notebook. After all of the generations are done running, it will replay the individual with the highest fitness (the one that makes the goal) 
+- Graphs describing the average fitness over time, the speciation, as well as a visualization of the resultant network will be generated automatically.
+
+Note: With the current settings, checkpoints of the population will be generated every 25 generations and saved to the directory. To disable this, comment out “p.add_reporter(neat.Checkpointer(25))” in the 7th cell. 
+
+
+
+-------------- Original README from the AITK Project ----------------------------
 # aitk: Artificial Intelligence Toolkit
 
 [![DOI](https://zenodo.org/badge/339135763.svg)](https://zenodo.org/badge/latestdoi/339135763)
